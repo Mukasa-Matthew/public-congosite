@@ -21,7 +21,9 @@ export default function Header() {
     queryKey: ['site-settings'],
     queryFn: () => settingsService.getPublicSettings(),
     retry: 1,
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+    staleTime: 1 * 60 * 1000, // Cache for 1 minute (reduced for faster updates)
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const siteName = siteSettings?.site_name || 'Congo News';

@@ -25,7 +25,9 @@ function AppContent() {
     queryKey: ['site-settings'],
     queryFn: () => settingsService.getPublicSettings(),
     retry: 1,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 1 * 60 * 1000, // Cache for 1 minute (reduced for faster updates)
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
