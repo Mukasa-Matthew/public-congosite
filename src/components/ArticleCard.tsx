@@ -35,17 +35,54 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
     });
   };
 
+  // Helper function to detect if a URL is a video
+  const isVideoUrl = (url: string | null | undefined): boolean => {
+    if (!url) return false;
+    
+    // Check for video file extensions
+    const videoExtensions = /\.(mp4|webm|mpeg|mpg|mov|quicktime|avi|wmv|flv|ogv|m4v)(\?.*)?$/i;
+    if (videoExtensions.test(url)) {
+      return true;
+    }
+    
+    // Check for video MIME types in data URLs
+    if (url.startsWith('data:video/')) {
+      return true;
+    }
+    
+    // Check for video MIME types in URLs
+    if (url.includes('video/') || url.includes('type=video')) {
+      return true;
+    }
+    
+    return false;
+  };
+
   if (featured) {
     return (
       <Link to={`/article/${article.id}`} className="group">
         <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
           {article.featured_image && (
             <div className="relative h-64 overflow-hidden">
-              <img
-                src={article.featured_image}
-                alt={article.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+              {isVideoUrl(article.featured_image) ? (
+                <video
+                  src={article.featured_image}
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onMouseEnter={(e) => e.currentTarget.play()}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.pause();
+                    e.currentTarget.currentTime = 0;
+                  }}
+                />
+              ) : (
+                <img
+                  src={article.featured_image}
+                  alt={article.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              )}
               <div className="absolute top-4 left-4">
                 {article.category_name && (
                   <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -84,11 +121,25 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
         <div className="flex flex-col md:flex-row">
           {article.featured_image && (
             <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0">
-              <img
-                src={article.featured_image}
-                alt={article.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+              {isVideoUrl(article.featured_image) ? (
+                <video
+                  src={article.featured_image}
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onMouseEnter={(e) => e.currentTarget.play()}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.pause();
+                    e.currentTarget.currentTime = 0;
+                  }}
+                />
+              ) : (
+                <img
+                  src={article.featured_image}
+                  alt={article.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              )}
             </div>
           )}
           <div className="p-4 flex-1">

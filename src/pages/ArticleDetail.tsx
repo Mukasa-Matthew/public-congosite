@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { articlesService } from '../services/articles';
 import ArticleCard from '../components/ArticleCard';
+import { useState, useEffect } from 'react';
 import { 
   MdAccessTime, 
   MdVisibility, 
@@ -16,6 +17,9 @@ import { SiWhatsapp } from 'react-icons/si';
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
+  const [mediaType, setMediaType] = useState<'video' | 'image' | 'unknown'>('unknown');
+  const [videoError, setVideoError] = useState(false);
+  
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', id],
     queryFn: () => articlesService.getById(Number(id)),
@@ -90,16 +94,94 @@ export default function ArticleDetail() {
     });
   };
 
+  // Helper function to detect if a URL is likely a video
+  const isVideoUrl = (url: string | null | undefined): boolean => {
+    if (!url) return false;
+    
+    // Check for video file extensions (most reliable)
+    const videoExtensions = /\.(mp4|webm|mpeg|mpg|mov|quicktime|avi|wmv|flv|ogv|m4v|mkv)(\?.*)?$/i;
+    if (videoExtensions.test(url)) {
+      return true;
+    }
+    
+    // Check for video MIME types in data URLs
+    if (url.startsWith('data:video/')) {
+      return true;
+    }
+    
+    // Check for video MIME types in URLs
+    if (url.includes('video/') || url.includes('type=video')) {
+      return true;
+    }
+    
+    // If URL is from uploads and we can't determine, be lenient and try video
+    // (This helps catch videos that might not have standard extensions)
+    if (url.includes('/uploads/')) {
+      // Could be a video, let the error handler determine
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Determine media type when article loads
+  useEffect(() => {
+    if (article?.featured_image) {
+      const url = article.featured_image;
+      // Try to detect from URL patterns
+      if (isVideoUrl(url)) {
+        setMediaType('video');
+      } else {
+        // Default to trying video first for unknown types, fallback to image
+        setMediaType('video');
+      }
+      setVideoError(false);
+    }
+  }, [article?.featured_image]);
+
   return (
     <article className="min-h-screen bg-white">
       {/* Hero Section */}
       {article.featured_image && (
-        <div className="relative h-96 overflow-hidden">
-          <img
-            src={article.featured_image}
-            alt={article.title}
-            className="w-full h-full object-cover"
-          />
+        <div className="relative h-96 overflow-hidden bg-gray-200">
+          {/* Try video first if detected as video or if we haven't determined it's an image yet */}
+          {!videoError && (isVideoUrl(article.featured_image) || mediaType === 'video' || mediaType === 'unknown') ? (
+            <video
+              key={article.featured_image} // Force re-render when URL changes
+              src={article.featured_image}
+              controls
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Video failed to load, falling back to image:', article.featured_image);
+                setVideoError(true);
+                setMediaType('image');
+              }}
+              onLoadedData={() => {
+                // Video loaded successfully
+                setMediaType('video');
+                setVideoError(false);
+              }}
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <img
+              key={article.featured_image} // Force re-render when URL changes
+              src={article.featured_image}
+              alt={article.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('Image failed to load:', article.featured_image);
+              }}
+              onLoad={() => {
+                setMediaType('image');
+              }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
             <div className="container mx-auto">
