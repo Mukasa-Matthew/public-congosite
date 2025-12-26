@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MdChevronLeft, MdChevronRight, MdPlayArrow, MdPause } from 'react-icons/md';
+import { MdChevronLeft, MdChevronRight, MdPlayArrow } from 'react-icons/md';
 
 interface MediaItem {
   id?: number;
