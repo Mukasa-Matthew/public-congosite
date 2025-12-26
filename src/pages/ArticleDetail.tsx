@@ -155,7 +155,7 @@ export default function ArticleDetail() {
               loop
               playsInline
               className="w-full h-full object-cover"
-              onError={(e) => {
+              onError={() => {
                 console.error('Video failed to load, falling back to image:', article.featured_image);
                 setVideoError(true);
                 setMediaType('image');
@@ -174,7 +174,7 @@ export default function ArticleDetail() {
               src={article.featured_image}
               alt={article.title}
               className="w-full h-full object-cover"
-              onError={(e) => {
+              onError={() => {
                 console.error('Image failed to load:', article.featured_image);
               }}
               onLoad={() => {
