@@ -1,11 +1,19 @@
 import { api } from '../config/api';
 
+export interface MediaItem {
+  id?: number;
+  url: string;
+  type: 'image' | 'video';
+  order?: number;
+}
+
 export interface Article {
   id: number;
   title: string;
   excerpt: string;
   body: string;
   featured_image: string | null;
+  media?: MediaItem[];
   category_id: number | null;
   category_name?: string;
   tags?: string;

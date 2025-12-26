@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { articlesService } from '../services/articles';
 import ArticleCard from '../components/ArticleCard';
-import { useState, useEffect } from 'react';
+import MediaCarousel from '../components/MediaCarousel';
 import { 
   MdAccessTime, 
   MdVisibility, 
@@ -17,8 +17,6 @@ import { SiWhatsapp } from 'react-icons/si';
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
-  const [mediaType, setMediaType] = useState<'video' | 'image' | 'unknown'>('unknown');
-  const [videoError, setVideoError] = useState(false);
   
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', id],
@@ -31,6 +29,27 @@ export default function ArticleDetail() {
     queryFn: () => articlesService.getRelated(Number(id), article?.category_id || undefined, 4),
     enabled: !!id && !!article,
   });
+
+
+  // Early returns MUST come after all hooks
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !article) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Article Not Found</h1>
+          <p className="text-gray-600">The article you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate reading time (average 200 words per minute)
   const calculateReadingTime = (text: string) => {
@@ -65,25 +84,6 @@ export default function ArticleDetail() {
     window.print();
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-      </div>
-    );
-  }
-
-  if (error || !article) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Article Not Found</h1>
-          <p className="text-gray-600">The article you're looking for doesn't exist.</p>
-        </div>
-      </div>
-    );
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -94,116 +94,61 @@ export default function ArticleDetail() {
     });
   };
 
-  // Helper function to detect if a URL is likely a video
-  const isVideoUrl = (url: string | null | undefined): boolean => {
-    if (!url) return false;
-    
-    // Check for video file extensions (most reliable)
+  // Helper to detect media type
+  const detectMediaType = (url: string): 'image' | 'video' => {
     const videoExtensions = /\.(mp4|webm|mpeg|mpg|mov|quicktime|avi|wmv|flv|ogv|m4v|mkv)(\?.*)?$/i;
-    if (videoExtensions.test(url)) {
-      return true;
+    if (videoExtensions.test(url) || url.includes('video/') || url.startsWith('data:video/')) {
+      return 'video';
     }
-    
-    // Check for video MIME types in data URLs
-    if (url.startsWith('data:video/')) {
-      return true;
-    }
-    
-    // Check for video MIME types in URLs
-    if (url.includes('video/') || url.includes('type=video')) {
-      return true;
-    }
-    
-    // If URL is from uploads and we can't determine, be lenient and try video
-    // (This helps catch videos that might not have standard extensions)
-    if (url.includes('/uploads/')) {
-      // Could be a video, let the error handler determine
-      return true;
-    }
-    
-    return false;
+    return 'image';
   };
 
-  // Determine media type when article loads
-  useEffect(() => {
-    if (article?.featured_image) {
-      const url = article.featured_image;
-      // Try to detect from URL patterns
-      if (isVideoUrl(url)) {
-        setMediaType('video');
-      } else {
-        // Default to trying video first for unknown types, fallback to image
-        setMediaType('video');
-      }
-      setVideoError(false);
-    }
-  }, [article?.featured_image]);
+  // Prepare media array for carousel
+  const mediaForCarousel = article.media && article.media.length > 0
+    ? article.media.map((item: any) => ({
+        id: item.id,
+        url: item.url,
+        type: item.type || (item.url.includes('video') || /\.(mp4|webm|mov|avi)/i.test(item.url) ? 'video' : 'image'),
+        order: item.order,
+      }))
+    : article.featured_image
+    ? [{
+        url: article.featured_image,
+        type: detectMediaType(article.featured_image),
+        order: 0,
+      }]
+    : [];
 
   return (
     <article className="min-h-screen bg-white">
-      {/* Hero Section */}
-      {article.featured_image && (
-        <div className="relative h-96 overflow-hidden bg-gray-200">
-          {/* Try video first if detected as video or if we haven't determined it's an image yet */}
-          {!videoError && (isVideoUrl(article.featured_image) || mediaType === 'video' || mediaType === 'unknown') ? (
-            <video
-              key={article.featured_image} // Force re-render when URL changes
-              src={article.featured_image}
-              controls
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-              onError={() => {
-                console.error('Video failed to load, falling back to image:', article.featured_image);
-                setVideoError(true);
-                setMediaType('image');
-              }}
-              onLoadedData={() => {
-                // Video loaded successfully
-                setMediaType('video');
-                setVideoError(false);
-              }}
-            >
-              Your browser does not support the video tag.
-            </video>
-          ) : (
-            <img
-              key={article.featured_image} // Force re-render when URL changes
-              src={article.featured_image}
-              alt={article.title}
-              className="w-full h-full object-cover"
-              onError={() => {
-                console.error('Image failed to load:', article.featured_image);
-              }}
-              onLoad={() => {
-                setMediaType('image');
-              }}
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-            <div className="container mx-auto">
-              {article.category_name && (
-                <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                  {article.category_name}
-                </span>
-              )}
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">{article.title}</h1>
-              <div className="flex items-center space-x-4 text-sm flex-wrap gap-2">
-                <span className="flex items-center space-x-1">
-                  <MdAccessTime className="w-4 h-4" />
-                  <span>{formatDate(article.published_at || article.created_at)}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <MdVisibility className="w-4 h-4" />
-                  <span>{article.views} views</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <MdAccessTime className="w-4 h-4" />
-                  <span>{readingTime} min read</span>
-                </span>
+      {/* Hero Section with Media Carousel */}
+      {mediaForCarousel.length > 0 && (
+        <div className="relative">
+          <MediaCarousel media={mediaForCarousel} className="h-96 md:h-[500px]" />
+          {/* Overlay with article info */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none">
+            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+              <div className="container mx-auto">
+                {article.category_name && (
+                  <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                    {article.category_name}
+                  </span>
+                )}
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">{article.title}</h1>
+                <div className="flex items-center space-x-4 text-sm flex-wrap gap-2">
+                  <span className="flex items-center space-x-1">
+                    <MdAccessTime className="w-4 h-4" />
+                    <span>{formatDate(article.published_at || article.created_at)}</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <MdVisibility className="w-4 h-4" />
+                    <span>{article.views} views</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <MdAccessTime className="w-4 h-4" />
+                    <span>{readingTime} min read</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
