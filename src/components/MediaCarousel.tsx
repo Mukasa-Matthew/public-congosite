@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MdChevronLeft, MdChevronRight, MdPlayArrow, MdPause } from 'react-icons/md';
 
 interface MediaItem {
@@ -16,7 +16,9 @@ interface MediaCarouselProps {
 export default function MediaCarousel({ media, className = '' }: MediaCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [videoRefs, setVideoRefs] = useState<{ [key: number]: HTMLVideoElement | null }>({});
+  const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
+  // Use useRef instead of useState to avoid infinite loops
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
 
   // Auto-advance slides every 5 seconds if not manually controlled
   useEffect(() => {
@@ -34,8 +36,9 @@ export default function MediaCarousel({ media, className = '' }: MediaCarouselPr
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     setIsPlaying(false);
+    setPlayingVideoIndex(null);
     // Pause all videos when changing slides
-    Object.values(videoRefs).forEach((video) => {
+    Object.values(videoRefs.current).forEach((video) => {
       if (video) video.pause();
     });
   };
@@ -49,24 +52,27 @@ export default function MediaCarousel({ media, className = '' }: MediaCarouselPr
   };
 
   const handleVideoPlay = (index: number) => {
-    const video = videoRefs[index];
+    const video = videoRefs.current[index];
     if (video) {
       if (video.paused) {
         // Pause all other videos
-        Object.entries(videoRefs).forEach(([idx, v]) => {
+        Object.entries(videoRefs.current).forEach(([idx, v]) => {
           if (v && Number(idx) !== index) v.pause();
         });
         video.play();
         setIsPlaying(true);
+        setPlayingVideoIndex(index);
       } else {
         video.pause();
         setIsPlaying(false);
+        setPlayingVideoIndex(null);
       }
     }
   };
 
   const handleVideoEnded = () => {
     setIsPlaying(false);
+    setPlayingVideoIndex(null);
     // Auto-advance to next slide when video ends
     if (media.length > 1) {
       setTimeout(() => {
@@ -88,7 +94,11 @@ export default function MediaCarousel({ media, className = '' }: MediaCarouselPr
           <div className="relative w-full bg-black">
             <video
               ref={(el) => {
-                if (el) setVideoRefs({ 0: el });
+                if (el) {
+                  videoRefs.current[0] = el;
+                } else {
+                  delete videoRefs.current[0];
+                }
               }}
               src={item.url}
               controls
@@ -129,20 +139,30 @@ export default function MediaCarousel({ media, className = '' }: MediaCarouselPr
               <div className="relative w-full h-full">
                 <video
                   ref={(el) => {
-                    if (el) setVideoRefs({ ...videoRefs, [index]: el });
+                    if (el) {
+                      videoRefs.current[index] = el;
+                    } else {
+                      delete videoRefs.current[index];
+                    }
                   }}
                   src={item.url}
                   controls
                   playsInline
                   className="w-full h-full object-contain"
                   onEnded={handleVideoEnded}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
+                  onPlay={() => {
+                    setIsPlaying(true);
+                    setPlayingVideoIndex(index);
+                  }}
+                  onPause={() => {
+                    setIsPlaying(false);
+                    setPlayingVideoIndex(null);
+                  }}
                 >
                   Your browser does not support the video tag.
                 </video>
-                {/* Custom play overlay for better UX */}
-                {videoRefs[index]?.paused && (
+                {/* Custom play overlay for better UX - show when video is paused and not playing */}
+                {playingVideoIndex !== index && (
                   <div
                     className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer group"
                     onClick={() => handleVideoPlay(index)}

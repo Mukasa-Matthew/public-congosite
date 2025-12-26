@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MdSearch, MdMenu, MdClose } from 'react-icons/md';
 import { categoriesService } from '../services/categories';
+import { settingsService } from '../services/settings';
 import { useQuery } from '@tanstack/react-query';
 
 export default function Header() {
@@ -15,6 +16,16 @@ export default function Header() {
     retry: false,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
+
+  const { data: siteSettings } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: () => settingsService.getPublicSettings(),
+    retry: 1,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+  });
+
+  const siteName = siteSettings?.site_name || 'Congo News';
+  const siteTagline = siteSettings?.site_tagline || 'Breaking News & Latest Updates';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +42,8 @@ export default function Header() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-4">
-              <span className="font-semibold">Congo News</span>
-              <span className="hidden md:inline">Breaking News & Latest Updates</span>
+              <span className="font-semibold">{siteName}</span>
+              <span className="hidden md:inline">{siteTagline}</span>
             </div>
             <div className="flex items-center space-x-4">
               <span className="hidden md:inline">Today: {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
@@ -49,7 +60,7 @@ export default function Header() {
             <div className="bg-red-600 text-white px-4 py-2 rounded font-bold text-2xl">
               CN
             </div>
-            <span className="text-2xl font-bold text-gray-900 hidden sm:block">Congo News</span>
+            <span className="text-2xl font-bold text-gray-900 hidden sm:block">{siteName}</span>
           </Link>
 
           {/* Desktop Navigation */}

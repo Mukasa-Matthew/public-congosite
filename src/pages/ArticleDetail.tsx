@@ -127,27 +127,27 @@ export default function ArticleDetail() {
           <MediaCarousel media={mediaForCarousel} className="h-96 md:h-[500px]" />
           {/* Overlay with article info */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none">
-            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-              <div className="container mx-auto">
-                {article.category_name && (
-                  <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                    {article.category_name}
-                  </span>
-                )}
+          <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+            <div className="container mx-auto">
+              {article.category_name && (
+                <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
+                  {article.category_name}
+                </span>
+              )}
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">{article.title}</h1>
-                <div className="flex items-center space-x-4 text-sm flex-wrap gap-2">
-                  <span className="flex items-center space-x-1">
-                    <MdAccessTime className="w-4 h-4" />
-                    <span>{formatDate(article.published_at || article.created_at)}</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <MdVisibility className="w-4 h-4" />
-                    <span>{article.views} views</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <MdAccessTime className="w-4 h-4" />
-                    <span>{readingTime} min read</span>
-                  </span>
+              <div className="flex items-center space-x-4 text-sm flex-wrap gap-2">
+                <span className="flex items-center space-x-1">
+                  <MdAccessTime className="w-4 h-4" />
+                  <span>{formatDate(article.published_at || article.created_at)}</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <MdVisibility className="w-4 h-4" />
+                  <span>{article.views} views</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <MdAccessTime className="w-4 h-4" />
+                  <span>{readingTime} min read</span>
+                </span>
                 </div>
               </div>
             </div>

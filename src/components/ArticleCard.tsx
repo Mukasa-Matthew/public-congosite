@@ -77,11 +77,11 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
                   }}
                 />
               ) : (
-                <img
-                  src={article.featured_image}
-                  alt={article.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+              <img
+                src={article.featured_image}
+                alt={article.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
               )}
               <div className="absolute top-4 left-4">
                 {article.category_name && (
@@ -134,11 +134,11 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
                   }}
                 />
               ) : (
-                <img
-                  src={article.featured_image}
-                  alt={article.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+              <img
+                src={article.featured_image}
+                alt={article.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
               )}
             </div>
           )}
