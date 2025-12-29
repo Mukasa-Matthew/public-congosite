@@ -34,7 +34,7 @@ pm2 restart congo-back
 ### 2. Update Nginx Configuration
 
 ```bash
-sudo nano /etc/nginx/sites-available/congonews.news
+    sudo nano /etc/nginx/sites-available/congonews.news
 ```
 
 **Replace the entire file with the contents from `nginx-complete.conf`**
