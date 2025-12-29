@@ -59,9 +59,11 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-red-600 text-white px-4 py-2 rounded font-bold text-2xl">
-              CN
-            </div>
+            <img 
+              src="/42c645e0-e3c8-11f0-b20e-95d9b9f5ff2c.png" 
+              alt={siteName}
+              className="h-12 w-auto"
+            />
             <span className="text-2xl font-bold text-gray-900 hidden sm:block">{siteName}</span>
           </Link>
 
