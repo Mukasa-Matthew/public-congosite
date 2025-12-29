@@ -62,31 +62,48 @@ export default function ArticleDetail() {
         meta.setAttribute('content', content);
       };
 
-      // Ensure image URL is absolute
+      // Ensure image URL is absolute and uses HTTPS
       let imageUrl = article.featured_image || `https://congonews.news/42c645e0-e3c8-11f0-b20e-95d9b9f5ff2c.png`;
       if (imageUrl && !imageUrl.startsWith('http')) {
-        imageUrl = `https://congonews.news${imageUrl}`;
+        imageUrl = `https://congonews.news${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
       }
+      // Ensure HTTPS
+      if (imageUrl.startsWith('http://')) {
+        imageUrl = imageUrl.replace('http://', 'https://');
+      }
+      
+      const description = article.excerpt || article.title || 'Read the full article on Congo News';
+      const title = article.title || 'Congo News Article';
       
       // Open Graph tags for Facebook, WhatsApp, LinkedIn, etc.
       updateMetaTag('og:type', 'article');
       updateMetaTag('og:url', articleUrl);
-      updateMetaTag('og:title', article.title);
-      updateMetaTag('og:description', article.excerpt || article.title);
+      updateMetaTag('og:title', title);
+      updateMetaTag('og:description', description);
       updateMetaTag('og:image', imageUrl);
+      updateMetaTag('og:image:secure_url', imageUrl);
       updateMetaTag('og:image:width', '1200');
       updateMetaTag('og:image:height', '630');
       updateMetaTag('og:image:type', 'image/jpeg');
+      updateMetaTag('og:site_name', 'Congo News');
       
       // Twitter Card tags
       updateMetaTag('twitter:card', 'summary_large_image');
       updateMetaTag('twitter:url', articleUrl);
-      updateMetaTag('twitter:title', article.title);
-      updateMetaTag('twitter:description', article.excerpt || article.title);
+      updateMetaTag('twitter:title', title);
+      updateMetaTag('twitter:description', description);
       updateMetaTag('twitter:image', imageUrl);
+      updateMetaTag('twitter:image:src', imageUrl);
       
       // Standard meta tags
-      updateMetaName('description', article.excerpt || article.title);
+      updateMetaName('description', description);
+      updateMetaName('twitter:description', description);
+      
+      // Additional tags for better compatibility
+      updateMetaTag('article:published_time', article.published_at || article.created_at);
+      if (article.category_name) {
+        updateMetaTag('article:section', article.category_name);
+      }
     }
   }, [article, articleUrl]);
 
