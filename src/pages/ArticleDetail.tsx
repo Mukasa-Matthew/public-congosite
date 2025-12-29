@@ -33,6 +33,62 @@ export default function ArticleDetail() {
     enabled: !!id && !!article,
   });
 
+  const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  // Update meta tags for social sharing - MUST be before early returns
+  useEffect(() => {
+    if (article) {
+      // Update title
+      document.title = `${article.title} - Congo News`;
+      
+      // Update or create Open Graph meta tags
+      const updateMetaTag = (property: string, content: string) => {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('property', property);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+
+      const updateMetaName = (name: string, content: string) => {
+        let meta = document.querySelector(`meta[name="${name}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('name', name);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+
+      // Ensure image URL is absolute
+      let imageUrl = article.featured_image || `https://congonews.news/42c645e0-e3c8-11f0-b20e-95d9b9f5ff2c.png`;
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = `https://congonews.news${imageUrl}`;
+      }
+      
+      // Open Graph tags for Facebook, WhatsApp, LinkedIn, etc.
+      updateMetaTag('og:type', 'article');
+      updateMetaTag('og:url', articleUrl);
+      updateMetaTag('og:title', article.title);
+      updateMetaTag('og:description', article.excerpt || article.title);
+      updateMetaTag('og:image', imageUrl);
+      updateMetaTag('og:image:width', '1200');
+      updateMetaTag('og:image:height', '630');
+      updateMetaTag('og:image:type', 'image/jpeg');
+      
+      // Twitter Card tags
+      updateMetaTag('twitter:card', 'summary_large_image');
+      updateMetaTag('twitter:url', articleUrl);
+      updateMetaTag('twitter:title', article.title);
+      updateMetaTag('twitter:description', article.excerpt || article.title);
+      updateMetaTag('twitter:image', imageUrl);
+      
+      // Standard meta tags
+      updateMetaName('description', article.excerpt || article.title);
+    }
+  }, [article, articleUrl]);
 
   // Early returns MUST come after all hooks
   if (isLoading) {
@@ -62,56 +118,7 @@ export default function ArticleDetail() {
   };
 
   const readingTime = article ? calculateReadingTime(article.body) : 0;
-  const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = article ? `${article.title} - ${article.excerpt}` : '';
-
-  // Update meta tags for social sharing
-  useEffect(() => {
-    if (article) {
-      // Update title
-      document.title = `${article.title} - Congo News`;
-      
-      // Update or create Open Graph meta tags
-      const updateMetaTag = (property: string, content: string) => {
-        let meta = document.querySelector(`meta[property="${property}"]`);
-        if (!meta) {
-          meta = document.createElement('meta');
-          meta.setAttribute('property', property);
-          document.head.appendChild(meta);
-        }
-        meta.setAttribute('content', content);
-      };
-
-      const updateMetaName = (name: string, content: string) => {
-        let meta = document.querySelector(`meta[name="${name}"]`);
-        if (!meta) {
-          meta = document.createElement('meta');
-          meta.setAttribute('name', name);
-          document.head.appendChild(meta);
-        }
-        meta.setAttribute('content', content);
-      };
-
-      const imageUrl = article.featured_image || `https://congonews.news/42c645e0-e3c8-11f0-b20e-95d9b9f5ff2c.png`;
-      
-      // Open Graph tags
-      updateMetaTag('og:type', 'article');
-      updateMetaTag('og:url', articleUrl);
-      updateMetaTag('og:title', article.title);
-      updateMetaTag('og:description', article.excerpt || article.title);
-      updateMetaTag('og:image', imageUrl);
-      
-      // Twitter Card tags
-      updateMetaTag('twitter:card', 'summary_large_image');
-      updateMetaTag('twitter:url', articleUrl);
-      updateMetaTag('twitter:title', article.title);
-      updateMetaTag('twitter:description', article.excerpt || article.title);
-      updateMetaTag('twitter:image', imageUrl);
-      
-      // Standard meta tags
-      updateMetaName('description', article.excerpt || article.title);
-    }
-  }, [article, articleUrl]);
 
   const shareToFacebook = () => {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}`, '_blank');
