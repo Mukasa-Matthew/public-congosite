@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { articlesService } from '../services/articles';
@@ -19,6 +19,7 @@ import { SiWhatsapp } from 'react-icons/si';
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
+  const [linkCopied, setLinkCopied] = useState(false);
   
   const { data: article, isLoading, error } = useQuery({
     queryKey: ['article', id],
@@ -65,7 +66,7 @@ export default function ArticleDetail() {
   const shareText = article ? `${article.title} - ${article.excerpt}` : '';
 
   // Update meta tags for social sharing
-  React.useEffect(() => {
+  useEffect(() => {
     if (article) {
       // Update title
       document.title = `${article.title} - Congo News`;
@@ -133,8 +134,6 @@ export default function ArticleDetail() {
     const body = encodeURIComponent(`${shareText}\n\nRead more: ${articleUrl}`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
-
-  const [linkCopied, setLinkCopied] = useState(false);
 
   const copyLink = async () => {
     try {
