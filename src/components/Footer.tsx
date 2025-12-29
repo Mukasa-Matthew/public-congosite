@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MdEmail, MdPhone } from 'react-icons/md';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { settingsService } from '../services/settings';
+import { newsletterService } from '../services/newsletter';
 
 export default function Footer() {
   const { data: siteSettings } = useQuery({
@@ -22,6 +24,30 @@ export default function Footer() {
   const twitterUrl = siteSettings?.twitter_url || '#';
   const instagramUrl = siteSettings?.instagram_url || '#';
   const youtubeUrl = siteSettings?.youtube_url || '#';
+
+  const [email, setEmail] = useState('');
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const subscribeMutation = useMutation({
+    mutationFn: newsletterService.subscribe,
+    onSuccess: () => {
+      setSubscribeStatus('success');
+      setEmail('');
+      setTimeout(() => setSubscribeStatus('idle'), 3000);
+    },
+    onError: () => {
+      setSubscribeStatus('error');
+      setTimeout(() => setSubscribeStatus('idle'), 3000);
+    },
+  });
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) {
+      subscribeMutation.mutate(email.trim());
+    }
+  };
+
   return (
     <footer className="bg-gray-900 text-white mt-16">
       <div className="container mx-auto px-4 py-12">
@@ -116,16 +142,31 @@ export default function Footer() {
             <p className="text-gray-400 text-sm mb-4">
               Subscribe to get the latest news delivered to your inbox.
             </p>
-            <div className="flex space-x-2">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-              <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-medium transition">
-                Subscribe
-              </button>
-            </div>
+            <form onSubmit={handleSubscribe} className="space-y-2">
+              <div className="flex space-x-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email"
+                  required
+                  className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <button 
+                  type="submit"
+                  disabled={subscribeMutation.isPending}
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-4 py-2 rounded font-medium transition"
+                >
+                  {subscribeMutation.isPending ? '...' : 'Subscribe'}
+                </button>
+              </div>
+              {subscribeStatus === 'success' && (
+                <p className="text-green-400 text-sm">Successfully subscribed! Check your email.</p>
+              )}
+              {subscribeStatus === 'error' && (
+                <p className="text-red-400 text-sm">Subscription failed. Please try again.</p>
+              )}
+            </form>
           </div>
         </div>
 

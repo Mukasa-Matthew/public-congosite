@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { articlesService } from '../services/articles';
@@ -9,10 +10,11 @@ import {
   MdShare,
   MdLink as MdLinkIcon,
   MdLabel,
-  MdPrint
+  MdPrint,
+  MdEmail
 } from 'react-icons/md';
 // Social media icons from Font Awesome (Material Design doesn't have these)
-import { FaTwitter, FaFacebook } from 'react-icons/fa';
+import { FaTwitter, FaFacebook, FaLinkedin } from 'react-icons/fa';
 import { SiWhatsapp } from 'react-icons/si';
 
 export default function ArticleDetail() {
@@ -62,6 +64,54 @@ export default function ArticleDetail() {
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = article ? `${article.title} - ${article.excerpt}` : '';
 
+  // Update meta tags for social sharing
+  React.useEffect(() => {
+    if (article) {
+      // Update title
+      document.title = `${article.title} - Congo News`;
+      
+      // Update or create Open Graph meta tags
+      const updateMetaTag = (property: string, content: string) => {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('property', property);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+
+      const updateMetaName = (name: string, content: string) => {
+        let meta = document.querySelector(`meta[name="${name}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('name', name);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', content);
+      };
+
+      const imageUrl = article.featured_image || `https://congonews.news/42c645e0-e3c8-11f0-b20e-95d9b9f5ff2c.png`;
+      
+      // Open Graph tags
+      updateMetaTag('og:type', 'article');
+      updateMetaTag('og:url', articleUrl);
+      updateMetaTag('og:title', article.title);
+      updateMetaTag('og:description', article.excerpt || article.title);
+      updateMetaTag('og:image', imageUrl);
+      
+      // Twitter Card tags
+      updateMetaTag('twitter:card', 'summary_large_image');
+      updateMetaTag('twitter:url', articleUrl);
+      updateMetaTag('twitter:title', article.title);
+      updateMetaTag('twitter:description', article.excerpt || article.title);
+      updateMetaTag('twitter:image', imageUrl);
+      
+      // Standard meta tags
+      updateMetaName('description', article.excerpt || article.title);
+    }
+  }, [article, articleUrl]);
+
   const shareToFacebook = () => {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(articleUrl)}`, '_blank');
   };
@@ -74,10 +124,34 @@ export default function ArticleDetail() {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + articleUrl)}`, '_blank');
   };
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(articleUrl);
-    // You could add a toast notification here
-    alert('Link copied to clipboard!');
+  const shareToLinkedIn = () => {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(articleUrl)}`, '_blank');
+  };
+
+  const shareViaEmail = () => {
+    const subject = encodeURIComponent(article.title);
+    const body = encodeURIComponent(`${shareText}\n\nRead more: ${articleUrl}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
+
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(articleUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = articleUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
   };
 
   const printArticle = () => {
@@ -245,11 +319,29 @@ export default function ArticleDetail() {
                 <span>WhatsApp</span>
               </button>
               <button
+                onClick={shareToLinkedIn}
+                className="flex items-center space-x-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg transition"
+              >
+                <FaLinkedin className="w-5 h-5" />
+                <span>LinkedIn</span>
+              </button>
+              <button
+                onClick={shareViaEmail}
+                className="flex items-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
+              >
+                <MdEmail className="w-5 h-5" />
+                <span>Email</span>
+              </button>
+              <button
                 onClick={copyLink}
-                className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                  linkCopied 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-gray-600 hover:bg-gray-700 text-white'
+                }`}
               >
                 <MdLinkIcon className="w-5 h-5" />
-                <span>Copy Link</span>
+                <span>{linkCopied ? 'Copied!' : 'Copy Link'}</span>
               </button>
               {navigator.share && (
                 <button

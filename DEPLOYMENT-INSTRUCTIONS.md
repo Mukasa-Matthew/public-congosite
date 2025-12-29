@@ -80,3 +80,4 @@ sudo systemctl reload nginx
 - **Build errors**: Make sure Node.js and npm are installed: `node --version && npm --version`
 - **SSL issues**: Renew certificate with `sudo certbot renew`
 
+
