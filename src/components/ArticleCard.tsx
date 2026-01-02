@@ -62,6 +62,29 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
     return (
       <Link to={`/article/${article.id}`} className="group">
         <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+          <div className="p-6">
+            {article.category_name && (
+              <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-3">
+                {article.category_name}
+              </span>
+            )}
+            <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition line-clamp-2">
+              {article.title}
+            </h2>
+            <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
+            <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+              <div className="flex items-center space-x-4">
+                <span className="flex items-center space-x-1">
+                  <MdAccessTime className="w-4 h-4" />
+                  <span>{formatDate(article.published_at || article.created_at)}</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <MdVisibility className="w-4 h-4" />
+                  <span>{article.views} views</span>
+                </span>
+              </div>
+            </div>
+          </div>
           {article.featured_image && (
             <div className="relative h-64 overflow-hidden">
               {isVideoUrl(article.featured_image) ? (
@@ -83,33 +106,8 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               )}
-              <div className="absolute top-4 left-4">
-                {article.category_name && (
-                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    {article.category_name}
-                  </span>
-                )}
-              </div>
             </div>
           )}
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition line-clamp-2">
-              {article.title}
-            </h2>
-            <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <div className="flex items-center space-x-4">
-                <span className="flex items-center space-x-1">
-                  <MdAccessTime className="w-4 h-4" />
-                  <span>{formatDate(article.published_at || article.created_at)}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <MdVisibility className="w-4 h-4" />
-                  <span>{article.views} views</span>
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </Link>
     );
@@ -118,9 +116,30 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
   return (
     <Link to={`/article/${article.id}`} className="group">
       <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-gray-100">
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col">
+          <div className="p-4">
+            {article.category_name && (
+              <span className="inline-block bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-semibold mb-2">
+                {article.category_name}
+              </span>
+            )}
+            <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-red-600 transition line-clamp-2">
+              {article.title}
+            </h3>
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{article.excerpt}</p>
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+              <span className="flex items-center space-x-1">
+                <MdAccessTime className="w-3 h-3" />
+                <span>{formatDate(article.published_at || article.created_at)}</span>
+              </span>
+              <span className="flex items-center space-x-1">
+                <MdVisibility className="w-3 h-3" />
+                <span>{article.views}</span>
+              </span>
+            </div>
+          </div>
           {article.featured_image && (
-            <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0">
+            <div className="relative w-full h-48 overflow-hidden">
               {isVideoUrl(article.featured_image) ? (
                 <video
                   src={article.featured_image}
@@ -142,27 +161,6 @@ export default function ArticleCard({ article, featured = false }: ArticleCardPr
               )}
             </div>
           )}
-          <div className="p-4 flex-1">
-            {article.category_name && (
-              <span className="inline-block bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-semibold mb-2">
-                {article.category_name}
-              </span>
-            )}
-            <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-red-600 transition line-clamp-2">
-              {article.title}
-            </h3>
-            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{article.excerpt}</p>
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span className="flex items-center space-x-1">
-                <MdAccessTime className="w-3 h-3" />
-                <span>{formatDate(article.published_at || article.created_at)}</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <MdVisibility className="w-3 h-3" />
-                <span>{article.views}</span>
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </Link>

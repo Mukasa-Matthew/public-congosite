@@ -218,64 +218,36 @@ export default function ArticleDetail() {
 
   return (
     <article className="min-h-screen bg-white">
-      {/* Hero Section with Media Carousel */}
-      {mediaForCarousel.length > 0 && (
-        <div className="relative">
-          <MediaCarousel media={mediaForCarousel} className="h-96 md:h-[500px]" />
-          {/* Overlay with article info */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none">
-          <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-            <div className="container mx-auto">
-              {article.category_name && (
-                <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                  {article.category_name}
-                </span>
-              )}
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">{article.title}</h1>
-              <div className="flex items-center space-x-4 text-sm flex-wrap gap-2">
-                <span className="flex items-center space-x-1">
-                  <MdAccessTime className="w-4 h-4" />
-                  <span>{formatDate(article.published_at || article.created_at)}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <MdVisibility className="w-4 h-4" />
-                  <span>{article.views} views</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <MdAccessTime className="w-4 h-4" />
-                  <span>{readingTime} min read</span>
-                </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Article Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {!article.featured_image && (
+        {/* Title Section - French Press Style (Title Above Image) */}
+        <div className="mb-8">
+          {article.category_name && (
+            <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
+              {article.category_name}
+            </span>
+          )}
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{article.title}</h1>
+          <div className="flex items-center space-x-4 text-sm text-gray-600 mb-6 flex-wrap gap-2">
+            <span className="flex items-center space-x-1">
+              <MdAccessTime className="w-4 h-4" />
+              <span>{formatDate(article.published_at || article.created_at)}</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <MdVisibility className="w-4 h-4" />
+              <span>{article.views} views</span>
+            </span>
+            <span className="flex items-center space-x-1">
+              <MdAccessTime className="w-4 h-4" />
+              <span>{readingTime} min read</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Media Carousel - Below Title (French Press Style) */}
+        {mediaForCarousel.length > 0 && (
           <div className="mb-8">
-            {article.category_name && (
-              <span className="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                {article.category_name}
-              </span>
-            )}
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{article.title}</h1>
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-6 flex-wrap gap-2">
-              <span className="flex items-center space-x-1">
-                <MdAccessTime className="w-4 h-4" />
-                <span>{formatDate(article.published_at || article.created_at)}</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <MdVisibility className="w-4 h-4" />
-                <span>{article.views} views</span>
-              </span>
-              <span className="flex items-center space-x-1">
-                <MdAccessTime className="w-4 h-4" />
-                <span>{readingTime} min read</span>
-              </span>
-            </div>
+            <MediaCarousel media={mediaForCarousel} className="h-96 md:h-[500px] w-full" />
           </div>
         )}
 
