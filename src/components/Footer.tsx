@@ -4,8 +4,19 @@ import { MdEmail, MdPhone } from 'react-icons/md';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { settingsService } from '../services/settings';
 import { newsletterService } from '../services/newsletter';
+import { categoriesService } from '../services/categories';
+import { getRssFeedUrl } from '../config/site';
 
 export default function Footer() {
+  const rssUrl = getRssFeedUrl();
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesService.getAll(),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: siteSettings } = useQuery({
     queryKey: ['site-settings'],
     queryFn: () => settingsService.getPublicSettings(),
@@ -68,14 +79,35 @@ export default function Footer() {
                 <Link to="/" className="hover:text-red-500 transition">Home</Link>
               </li>
               <li>
-                <Link to="/category/politics" className="hover:text-red-500 transition">Politics</Link>
+                <Link to="/search" className="hover:text-red-500 transition">Search</Link>
               </li>
               <li>
-                <Link to="/category/business" className="hover:text-red-500 transition">Business</Link>
+                <Link to="/saved" className="hover:text-red-500 transition">Saved articles</Link>
               </li>
               <li>
-                <Link to="/category/technology" className="hover:text-red-500 transition">Technology</Link>
+                <Link to="/about" className="hover:text-red-500 transition">About</Link>
               </li>
+              <li>
+                <Link to="/contact" className="hover:text-red-500 transition">Contact</Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-red-500 transition">Privacy</Link>
+              </li>
+              {rssUrl && (
+                <li>
+                  <a href={rssUrl} target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition">
+                    RSS feed
+                  </a>
+                </li>
+              )}
+              {categories &&
+                categories.slice(0, 6).map((c) => (
+                  <li key={c.id}>
+                    <Link to={`/category/${c.slug}`} className="hover:text-red-500 transition">
+                      {c.name}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
 

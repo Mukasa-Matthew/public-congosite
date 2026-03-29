@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { articlesService } from '../services/articles';
 import { categoriesService } from '../services/categories';
 import ArticleCard from '../components/ArticleCard';
-import { MdTrendingUp, MdFolder } from 'react-icons/md';
+import { MdTrendingUp, MdFolder, MdArrowForward } from 'react-icons/md';
 
 export default function Home() {
   const { data: featuredData, isLoading: featuredLoading, error: featuredError } = useQuery({
@@ -39,6 +39,16 @@ export default function Home() {
   const featuredArticle = featuredData?.articles?.[0];
   const latestArticles = latestData?.articles?.slice(1) || [];
   const moreArticlesList = moreArticles?.articles || [];
+
+  const spotlightCategories = (categories ?? []).slice(0, 4);
+  const categorySpotlightQueries = useQueries({
+    queries: spotlightCategories.map((cat) => ({
+      queryKey: ['articles', 'category-spotlight', cat.id],
+      queryFn: () => articlesService.getPublished({ category: cat.id, limit: 3, page: 1 }),
+      enabled: !!cat.id,
+      retry: false,
+    })),
+  });
 
   if (featuredLoading || latestLoading) {
     return (
@@ -111,6 +121,35 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Category spotlights (per-topic latest, portal-style) */}
+      {spotlightCategories.length > 0 &&
+        categorySpotlightQueries.map((q, i) => {
+          const cat = spotlightCategories[i];
+          const items = q.data?.articles ?? [];
+          if (!cat || items.length === 0) return null;
+          return (
+            <section key={cat.id} className="bg-white py-8 border-t border-gray-200">
+              <div className="container mx-auto px-4">
+                <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+                  <h2 className="text-3xl font-bold text-gray-900 border-l-4 border-red-600 pl-4">{cat.name}</h2>
+                  <Link
+                    to={`/category/${cat.slug}`}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-red-600 hover:text-red-700"
+                  >
+                    View all in {cat.name}
+                    <MdArrowForward className="w-4 h-4" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {items.map((article) => (
+                    <ArticleCard key={article.id} article={article} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        })}
 
       {/* Trending Articles */}
       {trendingArticles && trendingArticles.length > 0 && (

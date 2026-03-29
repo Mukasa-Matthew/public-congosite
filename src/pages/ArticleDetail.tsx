@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { articlesService } from '../services/articles';
 import ArticleCard from '../components/ArticleCard';
 import MediaCarousel from '../components/MediaCarousel';
+import { useSavedArticles } from '../hooks/useSavedArticles';
 import { 
   MdAccessTime, 
   MdVisibility, 
@@ -11,11 +12,40 @@ import {
   MdLink as MdLinkIcon,
   MdLabel,
   MdPrint,
-  MdEmail
+  MdEmail,
+  MdBookmark,
+  MdBookmarkBorder,
 } from 'react-icons/md';
 // Social media icons from Font Awesome (Material Design doesn't have these)
 import { FaTwitter, FaFacebook, FaLinkedin } from 'react-icons/fa';
 import { SiWhatsapp } from 'react-icons/si';
+
+type TagItem = { key: string; label: string; q: string };
+
+function parseArticleTags(tags: unknown): TagItem[] {
+  if (tags == null) return [];
+  if (Array.isArray(tags)) {
+    return tags
+      .map((t, i) => {
+        if (typeof t === 'string') return { key: `t-${i}`, label: t, q: t };
+        if (t && typeof t === 'object' && 'name' in t) {
+          const name = String((t as { name: string }).name);
+          const id = (t as { id?: number }).id;
+          return { key: id != null ? String(id) : `t-${i}`, label: name, q: name };
+        }
+        return null;
+      })
+      .filter((x): x is TagItem => x != null);
+  }
+  if (typeof tags === 'string') {
+    return tags
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s, i) => ({ key: `s-${i}`, label: s, q: s }));
+  }
+  return [];
+}
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +63,26 @@ export default function ArticleDetail() {
     enabled: !!id && !!article,
   });
 
+  const { isSaved, toggle: toggleSaved } = useSavedArticles();
+  const [readPct, setReadPct] = useState(0);
+
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  useEffect(() => {
+    if (!article) return;
+    const onScroll = () => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const y = window.scrollY;
+      setReadPct(docHeight > 0 ? Math.min(100, Math.round((y / docHeight) * 100)) : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [article?.id]);
 
   // Update meta tags for social sharing - MUST be before early returns
   useEffect(() => {
@@ -217,6 +266,14 @@ export default function ArticleDetail() {
     : [];
 
   return (
+    <>
+      <div
+        className="fixed top-0 left-0 right-0 z-[60] h-1 bg-gray-200 pointer-events-none"
+        aria-hidden
+        role="presentation"
+      >
+        <div className="h-full bg-red-600 transition-[width] duration-150 ease-out" style={{ width: `${readPct}%` }} />
+      </div>
     <article className="min-h-screen bg-white">
       {/* Article Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -259,25 +316,29 @@ export default function ArticleDetail() {
         )}
 
         {/* Tags */}
-        {article.tags && Array.isArray(article.tags) && article.tags.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-3">
-              <MdLabel className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Tags:</span>
+        {(() => {
+          const tagItems = parseArticleTags(article.tags as unknown);
+          if (tagItems.length === 0) return null;
+          return (
+            <div className="mb-8">
+              <div className="flex items-center space-x-2 mb-3">
+                <MdLabel className="w-5 h-5 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">Tags:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tagItems.map((tag) => (
+                  <Link
+                    key={tag.key}
+                    to={`/search?q=${encodeURIComponent(tag.q)}`}
+                    className="inline-block bg-gray-100 hover:bg-red-100 text-gray-700 hover:text-red-700 px-3 py-1 rounded-full text-sm transition"
+                  >
+                    {tag.label}
+                  </Link>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {article.tags.map((tag: any) => (
-                <Link
-                  key={tag.id || tag}
-                  to={`/search?q=${encodeURIComponent(typeof tag === 'string' ? tag : tag.name)}`}
-                  className="inline-block bg-gray-100 hover:bg-red-100 text-gray-700 hover:text-red-700 px-3 py-1 rounded-full text-sm transition"
-                >
-                  {typeof tag === 'string' ? tag : tag.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Article Body */}
         <div className="prose prose-lg max-w-none">
@@ -338,8 +399,9 @@ export default function ArticleDetail() {
                 <MdLinkIcon className="w-5 h-5" />
                 <span>{linkCopied ? 'Copied!' : 'Copy Link'}</span>
               </button>
-              {navigator.share && (
+              {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
                 <button
+                  type="button"
                   onClick={() => {
                     navigator.share({
                       title: article.title,
@@ -354,6 +416,23 @@ export default function ArticleDetail() {
                 </button>
               )}
               <button
+                type="button"
+                onClick={() => toggleSaved(article.id, article.title)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                  isSaved(article.id)
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-white border-2 border-gray-300 text-gray-800 hover:border-red-600 hover:text-red-600'
+                }`}
+              >
+                {isSaved(article.id) ? (
+                  <MdBookmark className="w-5 h-5" />
+                ) : (
+                  <MdBookmarkBorder className="w-5 h-5" />
+                )}
+                <span>{isSaved(article.id) ? 'Saved' : 'Save for later'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={printArticle}
                 className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition"
               >
@@ -377,6 +456,7 @@ export default function ArticleDetail() {
         )}
       </div>
     </article>
+    </>
   );
 }
 

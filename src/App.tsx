@@ -7,6 +7,11 @@ import Home from './pages/Home';
 import ArticleDetail from './pages/ArticleDetail';
 import Category from './pages/Category';
 import Search from './pages/Search';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
+import SavedArticles from './pages/SavedArticles';
+import BackToTop from './components/BackToTop';
 import { settingsService } from './services/settings';
 import { useEffect } from 'react';
 
@@ -45,9 +50,14 @@ function AppContent() {
           <Route path="/article/:id" element={<ArticleDetail />} />
           <Route path="/category/:slug" element={<Category />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/saved" element={<SavedArticles />} />
         </Routes>
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 }
