@@ -111,6 +111,13 @@ export default function ArticleDetail() {
         meta.setAttribute('content', content);
       };
 
+      const removeMetaProperty = (property: string) => {
+        document.querySelectorAll(`meta[property="${property}"]`).forEach((el) => el.remove());
+      };
+      const removeMetaName = (name: string) => {
+        document.querySelectorAll(`meta[name="${name}"]`).forEach((el) => el.remove());
+      };
+
       // Ensure image URL is absolute and uses HTTPS
       let imageUrl = article.featured_image || `https://congonews.news/42c645e0-e3c8-11f0-b20e-95d9b9f5ff2c.png`;
       if (imageUrl && !imageUrl.startsWith('http')) {
@@ -121,16 +128,17 @@ export default function ArticleDetail() {
         imageUrl = imageUrl.replace('http://', 'https://');
       }
       
-      /** Share previews: title + image only; short teaser — full excerpt stays on the page */
-      const shareDescription = 'Lire la suite sur Congo News.';
       const title = article.title || 'Congo News Article';
-      const seoDescription = article.excerpt || article.meta_description || article.title || shareDescription;
+      const seoDescription = article.excerpt || article.meta_description || article.title || 'Congo News';
 
-      // Open Graph tags for Facebook, WhatsApp, LinkedIn, etc.
+      removeMetaProperty('og:description');
+      removeMetaProperty('twitter:description');
+      removeMetaName('twitter:description');
+
+      // Open Graph — title + image only (no og:description: avoids extra line in WhatsApp card)
       updateMetaTag('og:type', 'article');
       updateMetaTag('og:url', articleUrl);
       updateMetaTag('og:title', title);
-      updateMetaTag('og:description', shareDescription);
       updateMetaTag('og:image', imageUrl);
       updateMetaTag('og:image:secure_url', imageUrl);
       const imagePath = imageUrl.split('?')[0].toLowerCase();
@@ -149,12 +157,9 @@ export default function ArticleDetail() {
       updateMetaTag('twitter:card', 'summary_large_image');
       updateMetaTag('twitter:url', articleUrl);
       updateMetaTag('twitter:title', title);
-      updateMetaTag('twitter:description', shareDescription);
       updateMetaTag('twitter:image', imageUrl);
       
-      // Standard meta tags (longer text for in-browser SEO; OG/teaser stays short for shares)
       updateMetaName('description', seoDescription);
-      updateMetaName('twitter:description', shareDescription);
       
       // Additional tags for better compatibility
       updateMetaTag('article:published_time', article.published_at || article.created_at);
