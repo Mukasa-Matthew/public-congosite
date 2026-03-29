@@ -131,9 +131,16 @@ export default function ArticleDetail() {
       updateMetaTag('og:description', description);
       updateMetaTag('og:image', imageUrl);
       updateMetaTag('og:image:secure_url', imageUrl);
-      updateMetaTag('og:image:width', '1200');
-      updateMetaTag('og:image:height', '630');
-      updateMetaTag('og:image:type', 'image/jpeg');
+      const imagePath = imageUrl.split('?')[0].toLowerCase();
+      const ogMime = imagePath.endsWith('.png')
+        ? 'image/png'
+        : imagePath.endsWith('.webp')
+          ? 'image/webp'
+          : imagePath.endsWith('.gif')
+            ? 'image/gif'
+            : 'image/jpeg';
+      updateMetaTag('og:image:type', ogMime);
+      updateMetaTag('og:image:alt', title);
       updateMetaTag('og:site_name', 'Congo News');
       
       // Twitter Card tags
@@ -142,7 +149,6 @@ export default function ArticleDetail() {
       updateMetaTag('twitter:title', title);
       updateMetaTag('twitter:description', description);
       updateMetaTag('twitter:image', imageUrl);
-      updateMetaTag('twitter:image:src', imageUrl);
       
       // Standard meta tags
       updateMetaName('description', description);
