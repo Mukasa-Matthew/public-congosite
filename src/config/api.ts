@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://congonews.news/api';
+// Production default is relative `/api` so the same host is used (apex + www) and Nginx can proxy.
+// Avoid hardcoding https://congonews.news/api — that breaks www and can trigger CORS when CORS_ORIGINS is tight.
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:9000/api' : '/api');
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

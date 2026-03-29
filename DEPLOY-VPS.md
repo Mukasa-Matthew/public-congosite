@@ -1,10 +1,28 @@
 # Deploy public site to the VPS
 
-The API base URL is fixed at **build** time. Set `.env.production` before `npm run build`.
+The API base URL is fixed at **build** time.
 
-## Recommended (`congonews.news` + Nginx `/api` → Node)
+**Default (no `.env.production` on the server):** production builds use **`/api`** (same host as the page). Dev uses `http://localhost:9000/api`.
 
-Use a **relative** API path so **www** and **apex** both work:
+Override only if you need a different API host:
+
+```env
+VITE_API_URL=https://api.example.com/api
+```
+
+## Nginx must proxy `/api/` and `/uploads/`
+
+If articles/settings never load, confirm your `congonews.news` server block includes `location /api/` → `http://127.0.0.1:9988` (see `nginx-with-prerender.conf` in this repo). Quick check on the VPS:
+
+```bash
+curl -sS https://congonews.news/api/health
+```
+
+Expect JSON like `{"status":"ok",...}`.
+
+## Optional `.env.production`
+
+Same as the default, explicit:
 
 ```env
 VITE_API_URL=/api
