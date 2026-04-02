@@ -131,14 +131,18 @@ export default function ArticleDetail() {
       const title = article.title || 'Congo News Article';
       const seoDescription = article.excerpt || article.meta_description || article.title || 'Congo News';
 
+      // Keep link previews consistent: use the same excerpt as OG/Twitter description.
       removeMetaProperty('og:description');
-      removeMetaProperty('twitter:description');
       removeMetaName('twitter:description');
+
+      const previewDescription =
+        (seoDescription || '').toString().replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 240);
 
       // Open Graph — title + image only (no og:description: avoids extra line in WhatsApp card)
       updateMetaTag('og:type', 'article');
       updateMetaTag('og:url', articleUrl);
       updateMetaTag('og:title', title);
+      updateMetaTag('og:description', previewDescription);
       updateMetaTag('og:image', imageUrl);
       updateMetaTag('og:image:secure_url', imageUrl);
       const imagePath = imageUrl.split('?')[0].toLowerCase();
@@ -158,6 +162,7 @@ export default function ArticleDetail() {
       updateMetaTag('twitter:url', articleUrl);
       updateMetaTag('twitter:title', title);
       updateMetaTag('twitter:image', imageUrl);
+      updateMetaName('twitter:description', previewDescription);
       
       updateMetaName('description', seoDescription);
       
